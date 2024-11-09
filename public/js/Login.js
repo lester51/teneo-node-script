@@ -17,9 +17,9 @@ form.addEventListener('submit', async (event) => {
             body: JSON.stringify(data)
             
         });
-        if (!response.ok) {
+        /*if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        }*/
         const res1 = await response.json();
         if (response.ok) {
             await Swal.fire({
