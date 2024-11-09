@@ -35,6 +35,10 @@ app.get('/', (req, res) => {
   res.send('SERVER FOR GRASS NODE AUTOFARMING SCRIPT\nMADE\nBY\nHackMeSenpai(HMS)')
 });
 
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, './public', 'index.html'));
+});
+
 app.listen(port, async() => {
   displayHeader();
   console.log(colors.info.bold("[ SYSTEM ]")+colors.info(` Loaded ${[uid].length} user IDs\n`));
