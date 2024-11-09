@@ -3,7 +3,7 @@
 * * * * * * * * * * * * * * * * * * * * * */
 body {
     font-family: Arial, sans-serif;
-    background-image: url('assets/mqcqc_logo.png'); /* Add a background image */
+    /* background-image: url('assets/mqcqc_logo.png'); */
     background-size: cover; /* Ensure the image covers the entire background */
     background-position: center; /* Center the image */
     background-repeat: no-repeat; /* Prevent the image from repeating */
