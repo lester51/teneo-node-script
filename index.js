@@ -1,5 +1,5 @@
-const colors = require('colors/safe');
-const WebSocket = require('ws');
+const colors = require('colors/safe'),
+WebSocket = require('ws');
 
 colors.setTheme({
   silly: 'rainbow',
@@ -14,12 +14,11 @@ colors.setTheme({
   error: 'red'
 });
 
-let pingInterval;
-let config;
-let socket = null;
+let pingInterval, config, userid, socket = null;
 
 function connectWebSocket(uid,opt) {
   config = opt || false;
+  userid = uid;
   if (socket) return;
   let userId = uid;
   let version = "v0.2";
@@ -85,6 +84,8 @@ function displayHeader() {
   console.log(colors.silly('=      Created by (HMS) lester51       ='));
   console.log(colors.silly('=     https://github.com/lester51      ='));
   console.log(colors.silly('========================================'));
+  console.log();
+  console.log(colors.info.bold("[ CONFIG ]")+"\n"+colors.info('UserID: '+userid+"\n"+"Ping Logging: "+config.silentPing));
   console.log();
 }
 
