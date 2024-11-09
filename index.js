@@ -38,6 +38,8 @@ function connectWebSocket(uid,opt) {
 
   socket.on('open', () => {
     console.log(colors.info.bold('[ INFO ]')+colors.info(' WebSocket connected'));
+    console.log(colors.info.bold("[ CONFIG ]")+"\n"+colors.info('UserID: '+userid+"\n"+"Ping Logging: "+config.silentPing));
+    console.log();
     startPinging();
   });
 
@@ -84,8 +86,6 @@ function displayHeader() {
   console.log(colors.silly('=      Created by (HMS) lester51       ='));
   console.log(colors.silly('=     https://github.com/lester51      ='));
   console.log(colors.silly('========================================'));
-  console.log();
-  console.log(colors.info.bold("[ CONFIG ]")+"\n"+colors.info('UserID: '+userid+"\n"+"Ping Logging: "+config.silentPing));
   console.log();
 }
 
