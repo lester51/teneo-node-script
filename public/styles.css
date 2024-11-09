@@ -1,0 +1,90 @@
+/* * * * * * * * * * * * * * * * * * * * * *
+*  CSS OF LOGIN AND SIGNUP PAGE *
+* * * * * * * * * * * * * * * * * * * * * */
+body {
+    font-family: Arial, sans-serif;
+    background-image: url('assets/mqcqc_logo.png'); /* Add a background image */
+    background-size: cover; /* Ensure the image covers the entire background */
+    background-position: center; /* Center the image */
+    background-repeat: no-repeat; /* Prevent the image from repeating */
+    background-attachment: fixed; /* Fix the image in place */
+    opacity: 1; /* Adjust the opacity of the background image */
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 90%; /* Use percentage for responsive width */
+    backdrop-filter: blur(10px);
+    max-width: 400px; /* Set a maximum width */
+    margin: 50px auto;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.7); /* Make the form background slightly transparent */
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+}
+
+fieldset {
+    border: 1px solid #ccc;
+    padding: 15px; /* Increased padding for better spacing */
+    margin: 0; /* Ensure no margin around fieldset */
+}
+
+legend {
+    font-weight: bold;
+}
+
+label {
+    display: block;
+    margin: 10px 0 5px;
+}
+
+input, select {
+    width: 100%; /* Full width to fit within the container */
+    padding: 10px; /* Increased padding for better usability */
+    margin-bottom: 15px; /* Increased bottom margin for spacing */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Include padding in width calculations */
+}
+
+button {
+    width: 100%; /* Full width to fit within the container */
+    padding: 10px;
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    box-sizing: border-box; /* Include padding in width calculations */
+}
+
+button:hover {
+    background-color: #4cae4c;
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 600px) {
+    .container {
+        margin: 20px; /* Reduce margin on smaller screens */
+        padding: 15px; /* Slightly reduce padding */
+    }
+
+    h1 {
+        font-size: 1.5em; /* Adjust heading size */
+    }
+}
+
+@media (max-width: 400px) {
+    h1 {
+        font-size: 1.2em; /* Further adjust heading size for very small screens */
+    }
+
+    input, select, button {
+        padding: 8px; /* Smaller padding for inputs and buttons */
+    }
+}

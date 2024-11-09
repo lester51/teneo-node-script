@@ -18,15 +18,27 @@ colors.setTheme({
   debug: 'blue',
   error: 'red'
 });
+const bodyParser = require('body-parser');
+const cors = require('cors');
 const express = require('express');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 let uid = process.env.UID;
 
 app.get('/', (req, res) => {
   res.send('SERVER FOR GRASS NODE AUTOFARMING SCRIPT\nMADE\nBY\nHackMeSenpai(HMS)')
-})
+});
+
+app.post('/login', async (req, res) => {
+    const { username, password, rememberMe } = req.body;
+    
+});
 
 app.listen(port, async() => {
   displayHeader();
