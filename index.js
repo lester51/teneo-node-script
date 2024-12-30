@@ -1,4 +1,5 @@
 const colors = require('colors/safe'),
+axios = require('axios'),
 WebSocket = require('ws');
 
 colors.setTheme({
@@ -14,31 +15,51 @@ colors.setTheme({
   error: 'red'
 });
 
-let pingInterval, config, userid, socket = null;
+let pingInterval, config, accessToken, socket = null;
 
-function connectWebSocket(uid,opt) {
+async function getAccessToken(creds) {
+  console.log(colors.info.bold("[ SYSTEM ]")+colors.info(` Please wait while logging you in . . .\n`));
+  let {data} = await axios.post('https:/\/auth.teneo.pro/api/login', {
+    'email': creds.email,
+    'password': creds.pass
+  }, {
+    headers: {
+	  /*
+	  UNCOMMENT THIS PARAMETERS FOR HEADERS
+	  IF YOU ARE FACING ISSUES IN REQUEST LIKE
+	  CLOUDFLARE, ETC.
+	  */
+	  'authority': 'auth.teneo.pro',
+	  //'accept-language': 'en-US,en;q=0.9',
+      //'origin': 'https://dashboard.teneo.pro',
+      //'referer': 'https://dashboard.teneo.pro/',
+      //'sec-ch-ua': '"Not-A.Brand";v="99", "Chromium";v="124"',
+      //'sec-ch-ua-mobile': '?0',
+      //'sec-ch-ua-platform': '"Linux"',
+      //'sec-fetch-dest': 'empty',
+      //'sec-fetch-mode': 'cors',
+      //'sec-fetch-site': 'same-site',
+      //'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      'x-api-key': 'OwAG3kib1ivOJG4Y0OCZ8lJETa6ypvsDtGmdhcjA'
+    }
+  });
+  return data;
+}
+
+function connectWebSocket(aT,opt) {
   config = opt || false;
-  userid = uid;
+  let accessToken = aT.access_token;
   if (socket) return;
-  let userId = uid;
   let version = "v0.2";
   let url = "wss://secure.ws.teneo.pro";
-  let wsUrl = `${url}/websocket?userId=${encodeURIComponent(userId)}&version=${encodeURIComponent(version)}`;
-  let headers = {
-    "accept-language": "en-US,en;q=0.9",
-    "cache-control": "no-cache",
-    "pragma": "no-cache",
-    "sec-websocket-extensions": "permessage-deflate; client_max_window_bits",
-    "sec-websocket-version": "13"
-  };
-
-  socket = new WebSocket(wsUrl,{
-    headers: headers
-  });
+  //OLD - userId parameter
+  //NEW - accessToken parameter
+  let wsUrl = `${url}/websocket?accessToken=${encodeURIComponent(accessToken)}&version=${encodeURIComponent(version)}`;
+  socket = new WebSocket(wsUrl);
 
   socket.on('open', () => {
     console.log(colors.info.bold('[ INFO ]')+colors.info(' WebSocket connected'));
-    console.log(colors.info.bold("[ CONFIG ]")+"\n"+colors.info('UserID: '+userid+"\n"+"Ping Logging: "+config.silentPing));
+    console.log(colors.info.bold("[ CONFIG ]")+"\n"+colors.info('UserID: '+aT.user.id+"\n"+"Ping Logging: "+config.silentPing));
     console.log();
     startPinging();
   });
@@ -89,4 +110,4 @@ function displayHeader() {
   console.log();
 }
 
-module.exports = { delay, displayHeader, connectWebSocket };
+module.exports = { delay, displayHeader, getAccessToken, connectWebSocket };
