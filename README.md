@@ -5,6 +5,7 @@ Script to automatically farm teneo points 24/7
 ## Features
 
 - Automated login
+- Access token getter page for login
 - Login using `Email and Password` or `Access Token`
 - Real-time balance monitoring
 - Express server for status monitoring
