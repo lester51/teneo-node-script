@@ -4,7 +4,9 @@
   "description": "farm teneo points automatically 24/7 (if server doesn't die)",
   "main": "server.js",
   "scripts": {
-    "start": "node server2.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "format": "prettier --write \"**/*.{js,json,md}\""
   },
   "author": "HackMeSenpai",
   "license": "MIT",
@@ -15,5 +17,9 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22",
+    "prettier": "^3.3.3"
   }
 }
