@@ -3,4 +3,5 @@ package-lock.json
 *.bak
 /public/*.bak
 /public/js/*.bak
+server2.js
 .env

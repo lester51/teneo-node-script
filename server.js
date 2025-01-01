@@ -6,7 +6,7 @@ const {
   displayHeader,
   getAccessToken,
   connectWebSocket
-} = require('./index');
+} = require('./src/index');
 colors.setTheme({
   silly: 'rainbow',
   input: 'grey',
@@ -40,18 +40,30 @@ app.get('/login', (req, res) => {
 
 app.listen(port, async() => {
   displayHeader();
-  if (process.env.TOKEN || process.env.TOKEN != null)
-    loginInfo = process.env.TOKEN
-  else {
-    let email = process.env.EMAIL;
-    let pass = process.env.PASSWORD;
-    loginInfo = await getAccessToken({email: email, pass: pass});
-    console.log(colors.info.bold("[ SYSTEM ]")+colors.info(` Loaded ${[loginInfo.user.id].length} user IDs\n`));
+  console.log(colors.verbose.bold("[ SERVER ]")+colors.info(`Server is open at port ${port}`));
+  if (token.startsWith("[") && token.endsWith("]")) {
+    token = process.env.TOKEN;
+	let tokenList = token.slice(1,-1).split(',').map(el=>el.replace(/ /g,""));
+	tokenList.forEach(accesstoken => {
+      connectWebSocket(accesstoken,{
+        silentPing: true
+      });
+	});
   }
-  await delay(1000);
-  connectWebSocket(loginInfo,{
-    silentPing: true
-  });
+  else {
+    if (process.env.TOKEN || process.env.TOKEN != null)
+      loginInfo = process.env.TOKEN
+    else {
+      let email = process.env.EMAIL;
+      let pass = process.env.PASSWORD;
+      loginInfo = await getAccessToken({email: email, pass: pass});
+      console.log(colors.info.bold("[ SYSTEM ]")+colors.info(` Loaded ${[loginInfo.user.id].length} user IDs\n`));
+    }
+    await delay(1000);
+    connectWebSocket(loginInfo,{
+      silentPing: true
+    });
+  }
 })
 
 module.exports = app;

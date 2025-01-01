@@ -18,6 +18,6 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, './public', 'login.html'));
 });
 
-app.listen(port, async() => {
-
+app.listen(port, async()=>{
+    console.log("Server is now open at port "+port);
 });

@@ -15,7 +15,8 @@ colors.setTheme({
   error: 'red'
 });
 
-let pingInterval, config, accessToken, socket = null;
+let pingInterval, config, accessToken, socket = null,
+sockets = {};
 
 async function getAccessToken(creds) {
   console.log(colors.info.bold("[ SYSTEM ]")+colors.info(` Please wait while logging you in . . .\n`));
@@ -24,79 +25,61 @@ async function getAccessToken(creds) {
     'password': creds.pass
   }, {
     headers: {
-	  /*
-	  UNCOMMENT THIS PARAMETERS FOR HEADERS
-	  IF YOU ARE FACING ISSUES IN REQUEST LIKE
-	  CLOUDFLARE, ETC.
-	  */
 	  'authority': 'auth.teneo.pro',
-	  //'accept-language': 'en-US,en;q=0.9',
       'origin': 'https://dashboard.teneo.pro',
       'referer': 'https://dashboard.teneo.pro/',
-      //'sec-ch-ua': '"Not-A.Brand";v="99", "Chromium";v="124"',
-      //'sec-ch-ua-mobile': '?0',
-      //'sec-ch-ua-platform': '"Linux"',
-      //'sec-fetch-dest': 'empty',
-      //'sec-fetch-mode': 'cors',
-      //'sec-fetch-site': 'same-site',
-      //'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
       'x-api-key': 'OwAG3kib1ivOJG4Y0OCZ8lJETa6ypvsDtGmdhcjA'
     }
   });
   return data;
 }
 
-function connectWebSocket(aT,opt) {
+function connectWebSocket(aT, opt) {
   config = opt || false;
-  if (socket) return;
   if (typeof aT === 'object') {
     accessToken = aT.access_token;
     uid = aT.user.id;
-  }
-  else {
+  } else {
     accessToken = aT;
     uid = null;
   }
   let version = "v0.2";
   let url = "wss://secure.ws.teneo.pro";
   let wsUrl = `${url}/websocket?accessToken=${encodeURIComponent(accessToken)}&version=${encodeURIComponent(version)}`;
-  socket = new WebSocket(wsUrl);
-
+  const socket = new WebSocket(wsUrl);
+  sockets[accessToken] = socket;
   socket.on('open', () => {
-    console.log(colors.info.bold('[ INFO ]')+colors.info(' WebSocket connected'));
-    console.log(colors.info.bold("[ CONFIG ]")+"\n"+colors.info('UserID: '+uid+"\n"+"Ping Logging: "+config.silentPing));
+    console.log(colors.info.bold('[ INFO ]') + colors.info(' WebSocket connected.'));
+    console.log(colors.info.bold("[ CONFIG ]") + "\n" + colors.info('User ID: ' + uid + "\n" + "Ping Logging: " + config.silentPing));
     console.log();
-    startPinging();
+    startPinging(socket);
   });
-
   socket.on('message', (data) => {
-    console.log(colors.debug.bold("[ PONG ]")+colors.debug(' Recieved message: '+data.toString()));
+    console.log(colors.debug.bold("[ PONG ]") + colors.debug(' Received message: ' + data.toString()));
   });
-
   socket.on('close', () => {
-    console.log(colors.warn.bold("[ WARNING ]")+colors.warn(' WebSocket connection closed'));
-    socket = null;
-    console.log(colors.info.bold("[ INFO ]")+colors.info(' Trying to reconnect...'));
-    connectWebSocket(aT,config)
+    console.log(colors.warn.bold("[ WARNING ]") + colors.warn(' WebSocket connection closed for token: ' + accessToken));
+    delete sockets[accessToken];
+    console.log(colors.info.bold("[ INFO ]") + colors.info(' Trying to reconnect for token: ' + accessToken));
+    connectWebSocket(aT, config);
   });
-
   socket.on('error', (error) => {
-    console.log(colors.error('WebSocket error: '+error));
-    socket = null;
+    console.log(colors.error('WebSocket error for token ' + accessToken + ': ' + error));
+    delete sockets[accessToken];
   });
 }
 
-function startPinging() {
-  stopPinging();
+function startPinging(socket) {
+  stopPinging(socket);
   pingInterval = setInterval(() => {
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({ type: "PING" }));
-      if (!config.silentPing) console.log(colors.verbose.bold("[ PONG ]")+colors.verbose(' Ping Message: '+JSON.stringify({ type: "PING", date: new Date().toISOString()})));
+      if (!config.silentPing) console.log(colors.verbose.bold("[ PONG ]") + colors.verbose(' Ping Message: ' + JSON.stringify({ type: "PING", date: new Date().toISOString() })));
     }
   }, 15000);
 }
 
-function stopPinging() {
+function stopPinging(socket) {
   if (pingInterval) {
     clearInterval(pingInterval);
     pingInterval = null;
