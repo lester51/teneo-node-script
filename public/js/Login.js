@@ -1,27 +1,43 @@
 const form = document.getElementById('loginForm');
 form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const apikey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra25uZ3JneHV4Z2pocGxicGV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU0MzgxNTAsImV4cCI6MjA0MTAxNDE1MH0.DRAvf8nH1ojnJBc3rD_Nw6t1AV8X_g6gmY_HByG2Mag";
+    const apikey = "OwAG3kib1ivOJG4Y0OCZ8lJETa6ypvsDtGmdhcjA";
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
-    const url = new URL('https://ikknngrgxuxgjhplbpey.supabase.co/auth/v1/token');
-    url.searchParams.append('grant_type', 'password')
     try {
-        const response = await fetch(url, {
-        method: 'POST',
+        const response = await fetch('https://auth.teneo.pro/api/login', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'apikey': apikey,
-                'authorization': 'Bearer '+apikey
+                'authority': 'auth.teneo.pro',
+    // Uncomment these headers if you are facing issues in the request
+    // 'accept-language': 'en-US,en;q=0.9',
+    // 'origin': 'https://dashboard.teneo.pro',
+    // 'referer': 'https://dashboard.teneo.pro/',
+    // 'sec-ch-ua': '"Not-A.Brand";v="99", "Chromium";v="124"',
+    // 'sec-ch-ua-mobile': '?0',
+    // 'sec-ch-ua-platform': '"Linux"',
+    // 'sec-fetch-dest': 'empty',
+    // 'sec-fetch-mode': 'cors',
+    // 'sec-fetch-site': 'same-site',
+    // 'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'x-api-key': apikey
             },
-            body: JSON.stringify(data)
-            
+            body: JSON.stringify({
+                email: data.email,
+                password: data.password
+            }),
+            mode: "cors",
+            credentials: "omit"
         });
-        const res1 = await response.json();
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        let res1 = await response.json();
         if (response.ok) {
             await Swal.fire({
-                title: 'Copy your UserID!',
-                text: res1.user.id,
+                title: 'Copy Your Login Token!',
+                text: res1.access_token,
                 icon: 'success',
                 confirmButtonText: 'OK'
             })

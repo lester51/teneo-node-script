@@ -31,8 +31,8 @@ async function getAccessToken(creds) {
 	  */
 	  'authority': 'auth.teneo.pro',
 	  //'accept-language': 'en-US,en;q=0.9',
-      //'origin': 'https://dashboard.teneo.pro',
-      //'referer': 'https://dashboard.teneo.pro/',
+      'origin': 'https://dashboard.teneo.pro',
+      'referer': 'https://dashboard.teneo.pro/',
       //'sec-ch-ua': '"Not-A.Brand";v="99", "Chromium";v="124"',
       //'sec-ch-ua-mobile': '?0',
       //'sec-ch-ua-platform': '"Linux"',
@@ -48,18 +48,23 @@ async function getAccessToken(creds) {
 
 function connectWebSocket(aT,opt) {
   config = opt || false;
-  let accessToken = aT.access_token;
   if (socket) return;
+  if (typeof aT === 'object') {
+    accessToken = aT.access_token;
+    uid = aT.user.id;
+  }
+  else {
+    accessToken = aT;
+    uid = null;
+  }
   let version = "v0.2";
   let url = "wss://secure.ws.teneo.pro";
-  //OLD - userId parameter
-  //NEW - accessToken parameter
   let wsUrl = `${url}/websocket?accessToken=${encodeURIComponent(accessToken)}&version=${encodeURIComponent(version)}`;
   socket = new WebSocket(wsUrl);
 
   socket.on('open', () => {
     console.log(colors.info.bold('[ INFO ]')+colors.info(' WebSocket connected'));
-    console.log(colors.info.bold("[ CONFIG ]")+"\n"+colors.info('UserID: '+aT.user.id+"\n"+"Ping Logging: "+config.silentPing));
+    console.log(colors.info.bold("[ CONFIG ]")+"\n"+colors.info('UserID: '+uid+"\n"+"Ping Logging: "+config.silentPing));
     console.log();
     startPinging();
   });
@@ -72,7 +77,7 @@ function connectWebSocket(aT,opt) {
     console.log(colors.warn.bold("[ WARNING ]")+colors.warn(' WebSocket connection closed'));
     socket = null;
     console.log(colors.info.bold("[ INFO ]")+colors.info(' Trying to reconnect...'));
-    connectWebSocket(uid,config)
+    connectWebSocket(aT,config)
   });
 
   socket.on('error', (error) => {
@@ -110,4 +115,9 @@ function displayHeader() {
   console.log();
 }
 
-module.exports = { delay, displayHeader, getAccessToken, connectWebSocket };
+module.exports = {
+  delay,
+  displayHeader,
+  getAccessToken,
+  connectWebSocket
+};

@@ -2,10 +2,10 @@ const colors = require('colors');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 const {
-    delay,
-    displayHeader,
-    getAccessToken,
-    connectWebSocket
+  delay,
+  displayHeader,
+  getAccessToken,
+  connectWebSocket
 } = require('./index');
 colors.setTheme({
   silly: 'rainbow',
@@ -30,11 +30,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-let email = process.env.EMAIL;
-let pass = process.env.PASSWORD;
-
 app.get('/', (req, res) => {
-  res.send('SERVER FOR GRASS NODE AUTOFARMING SCRIPT\nMADE\nBY\nHackMeSenpai(HMS)')
+  res.send('SERVER FOR TENEO COMMUNITY NODE AUTOFARMING SCRIPT\nMADE\nBY\nHackMeSenpai(HMS)')
 });
 
 app.get('/login', (req, res) => {
@@ -43,10 +40,15 @@ app.get('/login', (req, res) => {
 
 app.listen(port, async() => {
   displayHeader();
-  let loginInfo = await getAccessToken({email: email, pass: pass});
-  console.log(colors.info.bold("[ SYSTEM ]")+colors.info(` Loaded ${[loginInfo.user.id].length} user IDs\n`));
+  if (process.env.TOKEN || process.env.TOKEN != null)
+    loginInfo = process.env.TOKEN
+  else {
+    let email = process.env.EMAIL;
+    let pass = process.env.PASSWORD;
+    loginInfo = await getAccessToken({email: email, pass: pass});
+    console.log(colors.info.bold("[ SYSTEM ]")+colors.info(` Loaded ${[loginInfo.user.id].length} user IDs\n`));
+  }
   await delay(1000);
-  //let loginToken = getAccessToken({email: email, pass: pass});
   connectWebSocket(loginInfo,{
     silentPing: true
   });
