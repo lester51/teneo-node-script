@@ -2,9 +2,9 @@
   "name": "teneonode",
   "version": "2.0.0",
   "description": "farm teneo points automatically 24/7 (if server doesn't die)",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "author": "HackMeSenpai",
   "license": "MIT",
