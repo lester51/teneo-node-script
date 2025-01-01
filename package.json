@@ -4,7 +4,7 @@
   "description": "farm teneo points automatically 24/7 (if server doesn't die)",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server2.js"
   },
   "author": "HackMeSenpai",
   "license": "MIT",
