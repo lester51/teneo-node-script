@@ -39,16 +39,17 @@ app.get('/login', (req, res) => {
 });
 
 app.listen(port, async() => {
+  let token = process.env.TOKEN;
   displayHeader();
   console.log(colors.verbose.bold("[ SERVER ]")+colors.info(`Server is open at port ${port}`));
   if (token.startsWith("[") && token.endsWith("]")) {
-    token = process.env.TOKEN;
 	let tokenList = token.slice(1,-1).split(',').map(el=>el.replace(/ /g,""));
-	tokenList.forEach(accesstoken => {
-      connectWebSocket(accesstoken,{
+    for (const token of tokenList) {
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 seconds delay
+      connectWebSocket(token,{
         silentPing: true
-      });
-	});
+      })
+    }
   }
   else {
     if (process.env.TOKEN || process.env.TOKEN != null)
