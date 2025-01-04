@@ -42,18 +42,18 @@ app.listen(port, async() => {
   let token = process.env.TOKEN;
   displayHeader();
   console.log(colors.verbose.bold("[ SERVER ]")+colors.info(`Server is open at port ${port}`));
-  if (token.startsWith("[") && token.endsWith("]")) {
-	let tokenList = token.slice(1,-1).split(',').map(el=>el.replace(/ /g,""));
-    for (const token of tokenList) {
-      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 seconds delay
-      connectWebSocket(token,{
-        silentPing: true
-      })
+    if (process.env.TOKEN || process.env.TOKEN != null) {
+      if (token.startsWith("[") && token.endsWith("]")) {
+	    let tokenList = token.slice(1,-1).split(',').map(el=>el.replace(/ /g,""));
+        for (const token of tokenList) {
+          await new Promise(resolve => setTimeout(resolve, 2000)); // 2 seconds delay
+          connectWebSocket(token,{
+            silentPing: true
+          })
+        }
+      }
+      else loginInfo = process.env.TOKEN
     }
-  }
-  else {
-    if (process.env.TOKEN || process.env.TOKEN != null)
-      loginInfo = process.env.TOKEN
     else {
       let email = process.env.EMAIL;
       let pass = process.env.PASSWORD;
@@ -64,7 +64,6 @@ app.listen(port, async() => {
     connectWebSocket(loginInfo,{
       silentPing: true
     });
-  }
 })
 
 module.exports = app;
