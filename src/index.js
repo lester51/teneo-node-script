@@ -62,7 +62,7 @@ function connectWebSocket(aT, opt) {
     socket.on('close', () => {
         console.log(colors.warn.bold("[ WARNING ]") + colors.warn(' WebSocket connection closed.'));
         delete sockets[accessToken];
-        console.log(colors.info.bold("[ INFO ]") + colors.info(' Trying to reconnect for token: ' + accessToken));
+        console.log(colors.info.bold("[ INFO ]") + colors.info(' Trying to reconnect...'));
         connectWebSocket(aT, config);
     });
 
