@@ -91,7 +91,7 @@ const serverReferal = () => {
   });
 }
 
-let serverInstance = startServer();
+let serverInstance = serverReferal();
 
 module.exports = {
   app,
