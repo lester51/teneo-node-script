@@ -7,6 +7,10 @@ const {
   getAccessToken,
   connectWebSocket
 } = require('./src/index');
+const {
+  createAccount,
+  connectSocket
+} = require('./src/autoReferalFarm');
 colors.setTheme({
   silly: 'rainbow',
   input: 'grey',
@@ -38,10 +42,11 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, './public', 'login.html'));
 });
 
+//FOR HEARTBEAT POINTS FARMING 
 app.listen(port, async() => {
   let token = process.env.TOKEN;
   displayHeader();
-  console.log(colors.verbose.bold("[ SERVER ]")+colors.info(`Server is open at port ${port}`));
+  console.log(colors.verbose.bold("[ SERVER ]")+colors.info(`Server for heartbeat is open at port ${port}`));
     if (process.env.TOKEN || process.env.TOKEN != null) {
       if (token.startsWith("[") && token.endsWith("]")) {
 	    let tokenList = token.slice(1,-1).split(',').map(el=>el.replace(/ /g,""));
@@ -52,18 +57,44 @@ app.listen(port, async() => {
           })
         }
       }
-      else loginInfo = process.env.TOKEN
+      else {
+        loginInfo = process.env.TOKEN
+        await delay(1000);
+        connectWebSocket(loginInfo,{
+          silentPing: true
+        });
+      }
     }
     else {
       let email = process.env.EMAIL;
       let pass = process.env.PASSWORD;
       loginInfo = await getAccessToken({email: email, pass: pass});
       console.log(colors.info.bold("[ SYSTEM ]")+colors.info(` Loaded ${[loginInfo.user.id].length} user IDs\n`));
+      await delay(1000);
+      connectWebSocket(loginInfo,{
+        silentPing: true
+      });
     }
-    await delay(1000);
-    connectWebSocket(loginInfo,{
-      silentPing: true
-    });
-})
+});
 
-module.exports = app;
+//FOR REFERAL POINTS FARMING 
+const serverReferal = () => {
+  app.listen(port+1, async() => {
+    console.log(colors.verbose.bold("[ SERVER ]")+colors.info(`Server for auto referal is open at port ${port+1}`));
+    let creds = await createAccount(process.env.REFCODE);
+    loginInfo = await getAccessToken({email: creds.email, pass: creds.pass});
+    console.log(colors.info.bold("[ SYSTEM ]")+colors.info(` Loaded ${[loginInfo.user.id].length} user IDs\n`));
+    await delay(1000);
+    connectSocket(loginInfo,{
+      silentPing: true
+    },serverReferal);
+  });
+}
+
+let serverInstance = startServer();
+
+module.exports = {
+  app,
+  serverReferal,
+  serverInstance
+};

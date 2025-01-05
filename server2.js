@@ -1,7 +1,9 @@
 const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const fs = require('fs');
 const express = require('express');
+require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -20,4 +22,6 @@ app.get('/login', (req, res) => {
 
 app.listen(port, async()=>{
     console.log("Server is now open at port "+port);
+    let env_contents = fs.readFileSync('../.env');
+    console.log(env_contents);
 });
