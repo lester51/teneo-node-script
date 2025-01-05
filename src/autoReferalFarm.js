@@ -149,6 +149,7 @@ function connectSocket(aT, opt) {
     let version = "v0.2";
     let url = "wss://secure.ws.teneo.pro";
     let wsUrl = `${url}/websocket?accessToken=${encodeURIComponent(accessToken)}&version=${encodeURIComponent(version)}`;
+    let hb = 0;
     const socket = new WebSocket(wsUrl);
     sockets[accessToken] = socket;
 
@@ -161,6 +162,7 @@ function connectSocket(aT, opt) {
 
     socket.on('message', (data) => {
         console.log(colors.debug.bold("[ PONG ]") + colors.debug(' Received message: ' + data.toString()));
+        hb = data.heartbeats;
         if (data.heartbeats == 100) {
             stopPinging(accessToken);
             delete sockets[accessToken];
