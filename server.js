@@ -71,7 +71,7 @@ class Server {
             else {
                 let email = process.env.EMAIL;
                 let pass = process.env.PASSWORD;
-                loginInfo = await getAccessToken({email: email, pass: pass});
+                let loginInfo = await getAccessToken({email: email, pass: pass});
                 console.log(colors.info.bold("[ SYSTEM ]")+colors.info(` Loaded ${[loginInfo.user.id].length} user IDs\n`));
                 connectWebSocket(loginInfo,{
                     silentPing: true
