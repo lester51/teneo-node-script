@@ -1,7 +1,9 @@
-const colors = require('colors/safe'),
-    axios = require('axios'),
-    WebSocket = require('ws');
+const colors = require('colors/safe');
+const axios = require('axios');
+const WebSocket = require('ws');
+const setupServers = require('../server');
 
+let pingIntervals = {}, config, accessToken, sockets = {};
 colors.setTheme({
     silly: 'rainbow',
     input: 'grey',
@@ -14,8 +16,6 @@ colors.setTheme({
     debug: 'blue',
     error: 'red'
 });
-
-let pingIntervals = {}, config, accessToken, sockets = {};
 
 async function getAccessToken(creds) {
     console.log(colors.info.bold("[ SYSTEM ]") + colors.info(` Please wait while logging you in . . .\n`));
@@ -47,25 +47,21 @@ function connectWebSocket(aT, opt) {
     let wsUrl = `${url}/websocket?accessToken=${encodeURIComponent(accessToken)}&version=${encodeURIComponent(version)}`;
     const socket = new WebSocket(wsUrl);
     sockets[accessToken] = socket;
-
     socket.on('open', () => {
         console.log(colors.info.bold('[ INFO ]') + colors.info(' WebSocket connected.'));
         console.log(colors.info.bold("[ CONFIG ]") + "\n" + colors.info('User  ID: ' + uid + "\n" + "Ping Logging: " + config.silentPing));
         console.log();
         startPinging(socket, accessToken);
     });
-
     socket.on('message', (data) => {
         console.log(colors.debug.bold("[ PONG ]") + colors.debug(' Received message: ' + data.toString()));
     });
-
     socket.on('close', () => {
         console.log(colors.warn.bold("[ WARNING ]") + colors.warn(' WebSocket connection closed.'));
         delete sockets[accessToken];
         console.log(colors.info.bold("[ INFO ]") + colors.info(' Trying to reconnect...'));
         connectWebSocket(aT, config);
     });
-
     socket.on('error', (error) => {
         console.log(colors.error('WebSocket error: ' + error));
         delete sockets[accessToken];
@@ -89,8 +85,6 @@ function stopPinging(accessToken) {
     }
 }
 
-let delay = async (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 function displayHeader() {
     process.stdout.write('\x1Bc');
     console.log(colors.silly('========================================'));
@@ -102,7 +96,6 @@ function displayHeader() {
 }
 
 module.exports = {
-    delay,
     displayHeader,
     getAccessToken,
     connectWebSocket

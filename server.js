@@ -1,100 +1,95 @@
-const colors = require('colors');
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, './.env') });
-const {
-  delay,
-  displayHeader,
-  getAccessToken,
-  connectWebSocket
-} = require('./src/index');
-const {
-  createAccount,
-  connectSocket
-} = require('./src/autoReferalFarm');
-colors.setTheme({
-  silly: 'rainbow',
-  input: 'grey',
-  verbose: 'cyan',
-  prompt: 'grey',
-  info: 'green',
-  data: 'grey',
-  help: 'cyan',
-  warn: 'yellow',
-  debug: 'blue',
-  error: 'red'
-});
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const express = require('express');
-const app = express();
-const port = process.env.PORT || 3000;
+class Server {
+    startServer() {
+        const colors = require('colors');
+        const path = require('path');
+        const bodyParser = require('body-parser');
+        const cors = require('cors');
+        const express = require('express');
+        const {
+            displayHeader,
+            getAccessToken,
+            connectWebSocket
+        } = require('./src/index');
+        const {
+            createAccount,
+            connectSocket
+        } = require('./src/autoReferalFarm');
+        const port = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.get('/', (req, res) => {
-  res.send('SERVER FOR TENEO COMMUNITY NODE AUTOFARMING SCRIPT\nMADE\nBY\nHackMeSenpai(HMS)')
-});
-
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, './public', 'login.html'));
-});
-
-//FOR HEARTBEAT POINTS FARMING 
-app.listen(port, async() => {
-  let token = process.env.TOKEN;
-  displayHeader();
-  console.log(colors.verbose.bold("[ SERVER ]")+colors.info(`Server for heartbeat is open at port ${port}`));
-    if (process.env.TOKEN || process.env.TOKEN != null) {
-      if (token.startsWith("[") && token.endsWith("]")) {
-	    let tokenList = token.slice(1,-1).split(',').map(el=>el.replace(/ /g,""));
-        for (const token of tokenList) {
-          await new Promise(resolve => setTimeout(resolve, 2000)); // 2 seconds delay
-          connectWebSocket(token,{
-            silentPing: true
-          })
-        }
-      }
-      else {
-        loginInfo = process.env.TOKEN
-        await delay(1000);
-        connectWebSocket(loginInfo,{
-          silentPing: true
+        require('dotenv').config({
+            path: path.resolve(__dirname, './.env')
         });
-      }
-    }
-    else {
-      let email = process.env.EMAIL;
-      let pass = process.env.PASSWORD;
-      loginInfo = await getAccessToken({email: email, pass: pass});
-      console.log(colors.info.bold("[ SYSTEM ]")+colors.info(` Loaded ${[loginInfo.user.id].length} user IDs\n`));
-      await delay(1000);
-      connectWebSocket(loginInfo,{
-        silentPing: true
-      });
-    }
-});
+        colors.setTheme({
+            silly: 'rainbow',
+            input: 'grey',
+            verbose: 'cyan',
+            prompt: 'grey',
+            info: 'green',
+            data: 'grey',
+            help: 'cyan',
+            warn: 'yellow',
+            debug: 'blue',
+            error: 'red'
+        });
 
-//FOR REFERAL POINTS FARMING 
-const serverReferal = () => {
-  app.listen(port+1, async() => {
-    console.log(colors.verbose.bold("[ SERVER ]")+colors.info(`Server for auto referal is open at port ${port+1}`));
-    let creds = await createAccount(process.env.REFCODE);
-    loginInfo = await getAccessToken({email: creds.email, pass: creds.pass});
-    console.log(colors.info.bold("[ SYSTEM ]")+colors.info(` Loaded ${[loginInfo.user.id].length} user IDs\n`));
-    await delay(1000);
-    connectSocket(loginInfo,{
-      silentPing: true
-    },serverReferal);
-  });
+        const app = express();
+        app.use(cors());
+        app.use(bodyParser.urlencoded({ extended: true }));
+        app.use(bodyParser.json());
+        app.use(express.static(path.join(__dirname, 'public')));
+
+        app.get('/', (req, res) => {
+            res.send('SERVER FOR TENEO COMMUNITY NODE AUTOFARMING SCRIPT\nMADE\nBY\nHackMeSenpai(HMS)')
+        });
+
+        app.get('/login', (req, res) => {
+            res.sendFile(path.join(__dirname, './public', 'login.html'));
+        });
+
+        //FOR HEARTBEAT POINTS FARMING
+        app.listen(3000, async() => {
+            let token = process.env.TOKEN;
+            displayHeader();
+            console.log(colors.verbose.bold("[ SERVER ]")+colors.info(`Server for heartbeat is open at port ${port}`));
+            if (process.env.TOKEN || process.env.TOKEN != null) {
+                if (token.startsWith("[") && token.endsWith("]")) {
+	                let tokenList = token.slice(1,-1).split(',').map(el=>el.replace(/ /g,""));
+                    for (const token of tokenList) {
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        connectWebSocket(token,{
+                            silentPing: true
+                        })
+                    }
+                }
+                else {
+                    loginInfo = process.env.TOKEN
+                    connectWebSocket(loginInfo,{
+                        silentPing: true
+                    });
+                }
+            }
+            else {
+                let email = process.env.EMAIL;
+                let pass = process.env.PASSWORD;
+                loginInfo = await getAccessToken({email: email, pass: pass});
+                console.log(colors.info.bold("[ SYSTEM ]")+colors.info(` Loaded ${[loginInfo.user.id].length} user IDs\n`));
+                connectWebSocket(loginInfo,{
+                    silentPing: true
+                });
+            }
+        });
+
+        //FOR REFERAL POINTS FARMING
+        app.listen(port+1, async() => {
+            console.log(colors.verbose.bold("[ SERVER ]")+colors.info(`Server for auto referal is open at port ${port+1}`));
+            let creds = await createAccount(process.env.REFCODE);
+            let loginInfo = await getAccessToken({email: creds.email, pass: creds.pass});
+            console.log(colors.info.bold("[ SYSTEM ]")+colors.info(` Loaded ${[loginInfo.user.id].length} user IDs\n`));
+            connectSocket(loginInfo,{
+                silentPing: true
+            });
+        });
+    }
 }
 
-let serverInstance = serverReferal();
-
-module.exports = {
-  app,
-  serverReferal,
-  serverInstance
-};
+module.exports = new Server();

@@ -2,37 +2,39 @@ const cheerio = require('cheerio');
 const axios = require('axios');
 const WebSocket = require('ws');
 const colors = require('colors/safe');
-const {
-  serverReferal,
-  serverInstance
-} = require('../server');
+const path = require('path');
+const restartServer = require('./serverControler');
+const serverScript = path.resolve(__dirname, '../server.js');
 
 const urlCheckEmail = 'https://auth.teneo.pro/api/check-user-exists';
 const urlSignup = 'https://node-b.teneo.pro/auth/v1/signup';
+const baseUrl = "https:/\/smailpro.com/";
 
 const headersCheckEmail = {
-  'authority': 'auth.teneo.pro',
-  'origin': 'https://dashboard.teneo.pro',
-  'referer': 'https://dashboard.teneo.pro/',
-  'x-api-key': 'OwAG3kib1ivOJG4Y0OCZ8lJETa6ypvsDtGmdhcjA'
+    'authority': 'auth.teneo.pro',
+    'origin': 'https://dashboard.teneo.pro',
+    'referer': 'https://dashboard.teneo.pro/',
+    'x-api-key': 'OwAG3kib1ivOJG4Y0OCZ8lJETa6ypvsDtGmdhcjA'
 };
 
 const headersRegister = {
-  'authority': 'node-b.teneo.pro',
-  'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra25uZ3JneHV4Z2pocGxicGV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU0MzgxNTAsImV4cCI6MjA0MTAxNDE1MH0.DRAvf8nH1ojnJBc3rD_Nw6t1AV8X_g6gmY_HByG2Mag',
-  'authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra25uZ3JneHV4Z2pocGxicGV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU0MzgxNTAsImV4cCI6MjA0MTAxNDE1MH0.DRAvf8nH1ojnJBc3rD_Nw6t1AV8X_g6gmY_HByG2Mag',
-  'origin': 'https://dashboard.teneo.pro',
-  'referer': 'https://dashboard.teneo.pro/',
-  'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="101"',
-  'sec-ch-ua-mobile': '?0',
-  'sec-ch-ua-platform': '"Linux"',
-  'sec-fetch-dest': 'empty',
-  'sec-fetch-mode': 'cors',
-  'sec-fetch-site': 'same-site',
-  'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.40 Safari/537.36',
-  'x-client-info': 'supabase-js-web/2.47.10',
-  'x-supabase-api-version': '2024-01-01'
+    'authority': 'node-b.teneo.pro',
+    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra25uZ3JneHV4Z2pocGxicGV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU0MzgxNTAsImV4cCI6MjA0MTAxNDE1MH0.DRAvf8nH1ojnJBc3rD_Nw6t1AV8X_g6gmY_HByG2Mag',
+    'authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra25uZ3JneHV4Z2pocGxicGV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU0MzgxNTAsImV4cCI6MjA0MTAxNDE1MH0.DRAvf8nH1ojnJBc3rD_Nw6t1AV8X_g6gmY_HByG2Mag',
+    'origin': 'https://dashboard.teneo.pro',
+    'referer': 'https://dashboard.teneo.pro/',
+    'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="101"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"Linux"',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-site',
+    'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.40 Safari/537.36',
+    'x-client-info': 'supabase-js-web/2.47.10',
+    'x-supabase-api-version': '2024-01-01'
 };
+
+let pingIntervals = {}, config, accessToken, sockets = {};
 
 colors.setTheme({
     silly: 'rainbow',
@@ -47,39 +49,93 @@ colors.setTheme({
     error: 'red'
 });
 
-let pingIntervals = {}, config, accessToken, sockets = {};
-
-let randomStr = (length) => {
+function randomStr (length) {
     let result = '';
     const characters = '0123456789';
     const charactersLength = characters.length;
     let counter = 0;
     while (counter < length) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-      counter += 1;
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        counter += 1;
     }
     return result;
 }
 
 async function createEmail() {
-  try {
-    const response = await axios.post('https://api.internal.temp-mail.io/api/v3/email/new', {
-      min_name_length: 10,
-      max_name_length: 10
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error creating email:', error);
-  }
+    try {
+  	    let {
+  	  	    headers: {
+  	  	  	    'set-cookie': setCookie
+  	  	  	}
+  	  	} = await axios.get(baseUrl);
+        let cookies = setCookie.map(el=>el.split(';')[0]+';');9
+        cookies = cookies.join(' ');
+        let apiUrl = 'app/payload?url=https%3A%2F%2Fapp.sonjj.com%2Fv1%2Ftemp_email%2Fcreate';
+        let {
+            data: token
+        } = await axios.get(`${baseUrl}${apiUrl}`, {
+            headers: {
+      	        'cookie': cookies
+            }
+        });
+        let baseApiUrl = 'https:/\/app.sonjj.com/v1/temp_email/';
+        let {
+            data: {
+                email
+            }
+        } = await axios.get(`${baseApiUrl}create?payload=${token}`);
+        return {
+            email: email,
+            cookie: cookies,
+            refreshUrl: `${baseUrl}app/payload?url=${baseApiUrl}inbox&email=${email}`
+        }
+    }
+    catch(e) {
+  	    return e;
+    }
 }
 
-async function getMails(email) {
-  try {
-    const response = await axios.get(`https://api.internal.temp-mail.io/api/v3/email/${email}/messages`);
-    return response.data;
-  } catch (error) {
-    console.error('Error creating email:', error);
-  }
+async function getMails(obj,payload) {
+    try {
+        if (!payload) {
+            let {
+                data: payload
+            } = await axios.get(obj.refreshUrl, {
+                headers: {
+      	            'cookie': obj.cookie
+                }
+            });
+            let {
+                data: refreshToken
+            } = await axios.get(`${baseUrl}app/payload?url=https%3A%2F%2Fapp.sonjj.com%2Fv1%2Ftemp_email%2Finbox&email=${obj.email}`);
+            let {
+                data: {
+                    messages
+                }
+            } = await axios.get(`https:/\/app.sonjj.com/v1/temp_email/inbox?payload=${payload}`);
+            return {
+                refreshToken: refreshToken,
+                messages
+            }
+        }
+        else {
+            let {
+                data: refreshToken
+            } = await axios.get(`${baseUrl}app/payload?url=https%3A%2F%2Fapp.sonjj.com%2Fv1%2Ftemp_email%2Finbox&email=${obj.email}`);
+            let {
+                data: {
+                    messages
+                }
+            } = await axios.get(`https:/\/app.sonjj.com/v1/temp_email/inbox?payload=${payload}`);
+            return {
+                refreshToken: refreshToken,
+                messages
+            }
+        }
+    }
+    catch(e) {
+        return e;
+    }
 }
 
 async function createAccount(referalCode) {
@@ -97,7 +153,7 @@ async function createAccount(referalCode) {
 	        headers: headersCheckEmail
         }).then(response=>response.data.exist)
         .catch(error => {
-            console.error('Error:', error.response ? error.response.data : error.message);
+            throw new Error('Error:', error.response ? error.response.data : error.message);
         });
         if (!isExisting) {
 	        let password = name[0]+randomStr(4);
@@ -114,16 +170,40 @@ async function createAccount(referalCode) {
     	        headers: headersRegister
     	    }).then(response => response.data)
     	    .catch(error => {
-                console.error('Error:', error.response ? error.response.data : error.message);
+                throw new Error('Error:', error.response ? error.response.data : error.message);
             });
+            let res = await getMails(temporaryEmail);
+            let refreshToken = res.refreshToken;
             while(true){
-	            checkMsgs = await getMails(temporaryEmail.email).catch(e=>{
+                console.log("Refreshing Inbox for new messages...");
+                await new Promise(resolve => setTimeout(resolve, 5000));
+	            checkMsgs = await getMails(temporaryEmail,refreshToken).catch(e=>{
 	   	            throw new Error('Error happened while fetching the messages on this mailbox!')
 	            });
-	            if(checkMsgs.length==1) break;
-	            await new Promise(resolve => setTimeout(resolve, 5000));
+	            if (checkMsgs.messages.length == 0)
+	                refreshToken = checkMsgs.refreshToken;
+	            else
+	                break;
             }
-            let verifyEmailUrl = checkMsgs[0].body_text.match(/\[.*\]/gi)[1].slice(1,-1);
+            let {
+                data: msgToken
+            } = await axios.get(`${baseUrl}app/payload?url=https%3A%2F%2Fapp.sonjj.com%2Fv1%2Ftemp_email%2Fmessage&email=${temporaryEmail.email}&mid=${checkMsgs.messages[0].mid}`, {
+                headers: {
+                    'cookie': temporaryEmail.cookie
+                }
+            });
+            let {
+                data: {
+                    body
+                }
+            } = await axios.get(`https:/\/app.sonjj.com/v1/temp_email/message?payload=${msgToken}`);
+            let verifyUrlMatch = body.match(/href="([^"]+)"/);
+            if (verifyUrlMatch) {
+                let encodedUrl = verifyUrlMatch[1];
+                verifyEmailUrl = encodedUrl.replace(/&amp;/g, '&');
+            }
+            else
+                throw new Error("No verification URL found in the message body.");
             await axios.get(verifyEmailUrl);
             console.log("~• Account Creation Success •~\n\nemail: "+temporaryEmail.email+"\npass: "+password);
             return {
@@ -152,40 +232,38 @@ function connectSocket(aT, opt) {
     let hb = 0;
     const socket = new WebSocket(wsUrl);
     sockets[accessToken] = socket;
-
     socket.on('open', () => {
         console.log(colors.info.bold('[ INFO ]') + colors.info(' WebSocket connected.'));
         console.log(colors.info.bold("[ CONFIG ]") + "\n" + colors.info('User  ID: ' + uid + "\n" + "Ping Logging: " + config.silentPing));
         console.log();
         startPinging(socket, accessToken);
     });
-
-    socket.on('message', (data) => {
+    socket.on('message', async(data) => {
         console.log(colors.debug.bold("[ PONG ]") + colors.debug(' Received message: ' + data.toString()));
         hb = data.heartbeats;
-        if (data.heartbeats == 100) {
+        if (hb >= 100) {
             stopPinging(accessToken);
             delete sockets[accessToken];
-            serverInstance.close(() => {
-                console.log(colors.warn.bold("[ PONG ]") + colors.warn('Closed out remaining connections on auto referal server'));
-                console.log(colors.debug.bold("[ SYSTEM ]") + colors.debug(' Server is restarting in 3 sec...'));
-                setTimeout(() => {
-                    // Restart the server
-                    serverInstance = serverReferal();
-                }, 3000); // 3 seconds
-            });
+            console.log(colors.info.bold("[ SYSTEM ]") + colors.info(' Success Referal +1'));
+            console.log(colors.warn.bold("[ SYSTEM ]") + colors.warn(' Starting the process again...'));
+            setTimeout(() =>restartServer(), 3000);
         }
     });
-
     socket.on('close', () => {
         console.log(colors.warn.bold("[ WARNING ]") + colors.warn(' WebSocket connection closed.'));
-        if (hb >= 111) delete sockets[accessToken];
+        if (hb >= 100) {
+            delete sockets[accessToken];
+            console.log(colors.warn.bold("[ SYSTEM ]") + colors.warn(' Starting the process again...'));
+            setTimeout(() => {
+                restartServer();
+            }, 3000);
+        }
         else {
+            delete sockets[accessToken];
             console.log(colors.info.bold("[ INFO ]") + colors.info(' Trying to reconnect...'));
             connectSocket(aT, config);
         }
     });
-
     socket.on('error', (error) => {
         console.log(colors.error('WebSocket error: ' + error));
         delete sockets[accessToken];
@@ -197,7 +275,8 @@ function startPinging(socket, accessToken) {
     pingIntervals[accessToken] = setInterval(() => {
         if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({ type: "PING" }));
-            if (!config.silentPing) console.log(colors.verbose.bold("[ PONG ]") + colors.verbose(' Ping Message: ' + JSON.stringify({ type: "PING", date: new Date().toISOString() })));
+            if (!config.silentPing)
+                console.log(colors.verbose.bold("[ PONG ]") + colors.verbose(' Ping Message: ' + JSON.stringify({ type: "PING", date: new Date().toISOString() })));
         }
     }, 15000);
 }

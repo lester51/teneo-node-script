@@ -9,6 +9,7 @@ Script to automatically farm teneo points 24/7
 - Login using `Email and Password` or `Access Token`
 - Real-time balance monitoring
 - Express server for status monitoring
+- Auto restart if the server died/exited (uses cluster)
 - Multiple Account faming using your Access Tokens. check the .env_multiacc_example
 - Referal Farming (check the .env_example on format)
 
