@@ -175,7 +175,6 @@ async function createAccount(referalCode) {
             let res = await getMails(temporaryEmail);
             let refreshToken = res.refreshToken;
             while(true){
-                console.log("Refreshing Inbox for new messages...");
                 await new Promise(resolve => setTimeout(resolve, 5000));
 	            checkMsgs = await getMails(temporaryEmail,refreshToken).catch(e=>{
 	   	            throw new Error('Error happened while fetching the messages on this mailbox!')
@@ -271,7 +270,7 @@ function connectSocket(aT, opt) {
 }
 
 function startPinging(socket, accessToken) {
-    stopPinging(accessToken); // Stop any existing ping interval for this token
+    stopPinging(accessToken);
     pingIntervals[accessToken] = setInterval(() => {
         if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({ type: "PING" }));
