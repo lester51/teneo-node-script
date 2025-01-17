@@ -6,21 +6,18 @@ const serverScript = path.resolve(__dirname, '../server.js');
 function killScript() {
     try {
         let pid = execSync(`pgrep node`);
-        console.log(pid)
         pid = parseInt(pid.toString().split('\n')[1]);
-        execSync(`kill -9 ${pid}`)
-        console.log(`Successfully killed ${serverScript}`);
+        execSync(`kill ${pid}`)
     } catch (error) {
-        console.error(`Error killing script: ${error.message}`);
+        killScript();
     }
 }
 
 function startScript() {
     try {
         execSync(`node ${serverScript}`);
-        console.log(`Successfully Started ${serverScript}`);
     } catch (error) {
-        console.error(`Error starting script: ${error.message}`);
+        startScript();
     }
 }
 

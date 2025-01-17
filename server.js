@@ -1,5 +1,5 @@
 class Server {
-    startServer() {
+    async startServer() {
         const colors = require('colors');
         const path = require('path');
         const bodyParser = require('body-parser');
@@ -89,6 +89,44 @@ class Server {
                 silentPing: true
             });
         });
+        /*let PORT = port;
+        let refCode = process.env.REFCODE;
+        if (refCode.startsWith("[") && refCode.endsWith("]")) {
+	        let refCodeList = refCode.slice(1,-1).split(',').map(el=>el.replace(/ /g,""));
+            let appVars = [];
+            const apps = {};
+            for (let i = 0; i < refCodeList.length; ++i) {
+	            appVars.push(`app${i+1}`);
+            }
+            appVars.forEach(appVars => {
+                apps[appVars] = express();
+            });
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                appVars.forEach(appVars => {
+                    let openPorts = PORT+=1;
+	                
+                    apps[appVars].listen(openPorts, async() => {
+                        console.log(colors.verbose.bold("[ SERVER ]")+colors.info(`Server for auto referal is open at port ${openPorts}`));
+                        let creds = await createAccount(refCode);
+                        let loginInfo = await getAccessToken({email: creds.email, pass: creds.pass});
+                        console.log(colors.info.bold("[ SYSTEM ]")+colors.info(` Loaded ${[loginInfo.user.id].length} user IDs\n`));
+                        connectSocket(loginInfo,{
+                            silentPing: true
+                        });
+                    });
+                });
+        }
+        else {
+            app.listen(PORT+1, async() => {
+            console.log(colors.verbose.bold("[ SERVER ]")+colors.info(`Server for auto referal is open at port ${port+1}`));
+            let creds = await createAccount(refCode);
+            let loginInfo = await getAccessToken({email: creds.email, pass: creds.pass});
+            console.log(colors.info.bold("[ SYSTEM ]")+colors.info(` Loaded ${[loginInfo.user.id].length} user IDs\n`));
+            connectSocket(loginInfo,{
+                silentPing: true
+            });
+        });
+        }*/
     }
 }
 

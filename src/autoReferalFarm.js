@@ -203,7 +203,8 @@ async function createAccount(referalCode) {
             }
             else
                 throw new Error("No verification URL found in the message body.");
-            await axios.get(verifyEmailUrl);
+            console.log(verifyEmailUrl);
+            //await axios.get(verifyEmailUrl);
             console.log("~• Account Creation Success •~\n\nemail: "+temporaryEmail.email+"\npass: "+password);
             return {
                 email: temporaryEmail.email,
@@ -216,7 +217,8 @@ async function createAccount(referalCode) {
     }
 }
 
-function connectSocket(aT, opt) {
+async function connectSocket(aT, opt) {
+    return await new Promise(async(res,rej)=>{
     config = opt || false;
     if (typeof aT === 'object') {
         accessToken = aT.access_token;
@@ -229,6 +231,7 @@ function connectSocket(aT, opt) {
     let url = "wss://secure.ws.teneo.pro";
     let wsUrl = `${url}/websocket?accessToken=${encodeURIComponent(accessToken)}&version=${encodeURIComponent(version)}`;
     let hb = 0;
+    
     const socket = new WebSocket(wsUrl);
     sockets[accessToken] = socket;
     socket.on('open', () => {
@@ -236,6 +239,7 @@ function connectSocket(aT, opt) {
         console.log(colors.info.bold("[ CONFIG ]") + "\n" + colors.info('User  ID: ' + uid + "\n" + "Ping Logging: " + config.silentPing));
         console.log();
         startPinging(socket, accessToken);
+        res();
     });
     socket.on('message', async(data) => {
         console.log(colors.debug.bold("[ PONG ]") + colors.debug(' Received message: ' + data.toString()));
@@ -245,7 +249,7 @@ function connectSocket(aT, opt) {
             delete sockets[accessToken];
             console.log(colors.info.bold("[ SYSTEM ]") + colors.info(' Success Referal +1'));
             console.log(colors.warn.bold("[ SYSTEM ]") + colors.warn(' Starting the process again...'));
-            setTimeout(() =>restartServer(), 3000);
+            setTimeout(() => restartServer(), 3000);
         }
     });
     socket.on('close', () => {
@@ -253,9 +257,7 @@ function connectSocket(aT, opt) {
         if (hb >= 100) {
             delete sockets[accessToken];
             console.log(colors.warn.bold("[ SYSTEM ]") + colors.warn(' Starting the process again...'));
-            setTimeout(() => {
-                restartServer();
-            }, 3000);
+            setTimeout(() => restartServer(), 3000);
         }
         else {
             delete sockets[accessToken];
@@ -266,6 +268,7 @@ function connectSocket(aT, opt) {
     socket.on('error', (error) => {
         console.log(colors.error('WebSocket error: ' + error));
         delete sockets[accessToken];
+    });
     });
 }
 

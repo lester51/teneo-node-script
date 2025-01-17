@@ -1,5 +1,5 @@
 const cluster = require('cluster');
-const numCPUs = 1;//require('os').cpus().length;
+const numCPUs = 1; //require('os').cpus().length; 
 const app = require('./server.js');
 
 if (cluster.isMaster) {

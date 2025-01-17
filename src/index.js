@@ -69,7 +69,7 @@ function connectWebSocket(aT, opt) {
 }
 
 function startPinging(socket, accessToken) {
-    stopPinging(accessToken); // Stop any existing ping interval for this token
+    stopPinging(accessToken);
     pingIntervals[accessToken] = setInterval(() => {
         if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({ type: "PING" }));
