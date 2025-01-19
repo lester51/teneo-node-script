@@ -203,7 +203,7 @@ async function createAccount(referalCode) {
             }
             else
                 throw new Error("No verification URL found in the message body.");
-            console.log(verifyEmailUrl);
+            //console.log(verifyEmailUrl);
             //await axios.get(verifyEmailUrl);
             console.log("~• Account Creation Success •~\n\nemail: "+temporaryEmail.email+"\npass: "+password);
             return {
@@ -217,7 +217,7 @@ async function createAccount(referalCode) {
     }
 }
 
-async function connectSocket(aT, opt) {
+async function connectSocket(aT, server, opt) {
     return await new Promise(async(res,rej)=>{
     config = opt || false;
     if (typeof aT === 'object') {
@@ -230,7 +230,7 @@ async function connectSocket(aT, opt) {
     let version = "v0.2";
     let url = "wss://secure.ws.teneo.pro";
     let wsUrl = `${url}/websocket?accessToken=${encodeURIComponent(accessToken)}&version=${encodeURIComponent(version)}`;
-    let hb = 0;
+    let hb = 100;
     
     const socket = new WebSocket(wsUrl);
     sockets[accessToken] = socket;
@@ -243,13 +243,13 @@ async function connectSocket(aT, opt) {
     });
     socket.on('message', async(data) => {
         console.log(colors.debug.bold("[ PONG ]") + colors.debug(' Received message: ' + data.toString()));
-        hb = data.heartbeats;
+        //hb = data.heartbeats;
         if (hb >= 100) {
             stopPinging(accessToken);
             delete sockets[accessToken];
             console.log(colors.info.bold("[ SYSTEM ]") + colors.info(' Success Referal +1'));
             console.log(colors.warn.bold("[ SYSTEM ]") + colors.warn(' Starting the process again...'));
-            setTimeout(() => restartServer(), 3000);
+            setTimeout(() => restartServer(server), 3000);
         }
     });
     socket.on('close', () => {
@@ -257,7 +257,7 @@ async function connectSocket(aT, opt) {
         if (hb >= 100) {
             delete sockets[accessToken];
             console.log(colors.warn.bold("[ SYSTEM ]") + colors.warn(' Starting the process again...'));
-            setTimeout(() => restartServer(), 3000);
+            setTimeout(() => restartServer(server), 3000);
         }
         else {
             delete sockets[accessToken];
