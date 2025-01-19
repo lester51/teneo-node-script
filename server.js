@@ -47,7 +47,7 @@ class Server {
         });
 
         //FOR HEARTBEAT POINTS FARMING
-        /*app.listen(3000, async() => {
+        app.listen(3000, async() => {
             let token = process.env.TOKEN;
             displayHeader();
             console.log(colors.verbose.bold("[ SERVER ]")+colors.info(`Server for heartbeat is open at port ${port}`));
@@ -77,7 +77,7 @@ class Server {
                     silentPing: true
                 });
             }
-        });*/
+        });
 
         //FOR REFERAL POINTS FARMING
         let refServ = app.listen(port+1, async() => {
