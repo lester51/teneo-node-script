@@ -79,7 +79,7 @@ class Server {
             }
         });
 
-        //FOR REFERAL POINTS FARMING
+        //FOR REFERAL POINTS FARMING 
         /*let refServ = app.listen(port+1, async() => {
             console.log(colors.verbose.bold("[ SERVER ]")+colors.info(`Server for auto referal is open at port ${port+1}`));
             let creds = await createAccount(process.env.REFCODE);
