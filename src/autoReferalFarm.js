@@ -262,7 +262,7 @@ async function connectSocket(aT, server, opt) {
         else {
             delete sockets[accessToken];
             console.log(colors.info.bold("[ INFO ]") + colors.info(' Trying to reconnect...'));
-            connectSocket(aT, config);
+            connectSocket(aT, server, config);
         }
     });
     socket.on('error', (error) => {
