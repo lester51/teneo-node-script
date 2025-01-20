@@ -146,15 +146,16 @@ async function createAccount(referalCode) {
         let $ = cheerio.load(res.data)
         let name = $('div[class=random-results]').text().trim().trimStart().split(' ')
         let fullName = name[0]+name[2]
-        let temporaryEmail = await createEmail()
+        let temporaryEmail = await createEmail();
         let isExisting = await axios.post(urlCheckEmail, {
             email: temporaryEmail.email
         }, {
 	        headers: headersCheckEmail
-        }).then(response=>response.data.exist)
+        }).then(response=>response.data.exists)
         .catch(error => {
             throw new Error('Error:', error.response ? error.response.data : error.message);
         });
+        console.log(isExisting)
         if (!isExisting) {
 	        let password = name[0]+randomStr(4);
             let signup = await axios.post(urlSignup, {
@@ -168,10 +169,12 @@ async function createAccount(referalCode) {
                 code_challenge_method: null
             }, {
     	        headers: headersRegister
-    	    }).then(response => response.data)
+    	    }).then(response => console.log(response.data))
     	    .catch(error => {
+    	    console.log(error.response)
                 throw new Error('Error:', error.response ? error.response.data : error.message);
             });
+            console.log(signUp)
             let res = await getMails(temporaryEmail);
             let refreshToken = res.refreshToken;
             while(true){
