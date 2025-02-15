@@ -27,7 +27,7 @@ async function getAccessToken(creds) {
             'authority': 'auth.teneo.pro',
             'origin': 'https://dashboard.teneo.pro',
             'referer': 'https://dashboard.teneo.pro/',
-            'x-api-key': 'OwAG3kib1ivOJG4Y0OCZ8lJETa6ypvsDtGmdhcjA'
+            'x-api-key': 'OwAG3kib1ivOJG4Y0OCZ8lJETa6ypvsDtGmdhcjB'
         }
     });
     return data;

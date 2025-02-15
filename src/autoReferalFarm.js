@@ -6,6 +6,10 @@ const path = require('path');
 const restartServer = require('./serverControler');
 const serverScript = path.resolve(__dirname, '../server.js');
 
+/*require('dotenv').config({
+    path: path.resolve(__dirname, './.env')
+});*/
+
 const urlCheckEmail = 'https://auth.teneo.pro/api/check-user-exists';
 const urlSignup = 'https://node-b.teneo.pro/auth/v1/signup';
 const baseUrl = "https:/\/smailpro.com/";
@@ -61,77 +65,73 @@ function randomStr (length) {
     return result;
 }
 
-async function createEmail() {
+async function createEmail(name) {
     try {
-  	    let {
-  	  	    headers: {
-  	  	  	    'set-cookie': setCookie
-  	  	  	}
-  	  	} = await axios.get(baseUrl);
-        let cookies = setCookie.map(el=>el.split(';')[0]+';');9
-        cookies = cookies.join(' ');
-        let apiUrl = 'app/payload?url=https%3A%2F%2Fapp.sonjj.com%2Fv1%2Ftemp_email%2Fcreate';
-        let {
-            data: token
-        } = await axios.get(`${baseUrl}${apiUrl}`, {
-            headers: {
-      	        'cookie': cookies
-            }
-        });
-        let baseApiUrl = 'https:/\/app.sonjj.com/v1/temp_email/';
-        let {
-            data: {
-                email
-            }
-        } = await axios.get(`${baseApiUrl}create?payload=${token}`);
-        return {
-            email: email,
-            cookie: cookies,
-            refreshUrl: `${baseUrl}app/payload?url=${baseApiUrl}inbox&email=${email}`
-        }
+        return name+randomStr(3)+"@maildrop.cc";
     }
     catch(e) {
-  	    return e;
+        return e;
     }
 }
 
-async function getMails(obj,payload) {
+async function getMails(mail) {
     try {
-        if (!payload) {
-            let {
-                data: payload
-            } = await axios.get(obj.refreshUrl, {
-                headers: {
-      	            'cookie': obj.cookie
+ 	    let url = 'https:/\/api.maildrop.cc/graphql';
+ 	    let dataInbox = {
+ 	 	    operationName: "GetInbox",
+            variables: {
+                mailbox: mail.split('@')[0]
+            },
+            query: `query GetInbox($mailbox: String!) {
+                ping(message: "Test")
+                inbox(mailbox: $mailbox) {
+                    id
+                    subject
+                    date
+                    headerfrom
+                    __typename
                 }
+                altinbox(mailbox: $mailbox)
+            }`
+        };
+        let msg;
+        while (true) {
+            let { data: { data } } = await axios.post(url, dataInbox)
+            .catch(error => {
+                throw new Error('Error fetching data:', error);
             });
-            let {
-                data: refreshToken
-            } = await axios.get(`${baseUrl}app/payload?url=https%3A%2F%2Fapp.sonjj.com%2Fv1%2Ftemp_email%2Finbox&email=${obj.email}`);
-            let {
-                data: {
-                    messages
-                }
-            } = await axios.get(`https:/\/app.sonjj.com/v1/temp_email/inbox?payload=${payload}`);
-            return {
-                refreshToken: refreshToken,
-                messages
+            if (data.inbox.length > 0 && !!data.inbox[0].headerfrom.match(/teneo/i)) {
+                msg = data.inbox;
+                break;
             }
+            
+            await new Promise(resolve => setTimeout(resolve, 5000));
         }
-        else {
-            let {
-                data: refreshToken
-            } = await axios.get(`${baseUrl}app/payload?url=https%3A%2F%2Fapp.sonjj.com%2Fv1%2Ftemp_email%2Finbox&email=${obj.email}`);
-            let {
-                data: {
-                    messages
+ 	    let dataMessage = {
+  	        operationName: "GetMessage",
+            variables: {
+                mailbox: mail.split('@')[0],
+                id: msg[0].id
+            },
+            query: `query GetMessage($mailbox: String!, $id: String!) {
+                message(mailbox: $mailbox, id: $id) {
+                    id
+                    subject
+                    date
+                    headerfrom
+                    data
+                    html
+                    __typename
                 }
-            } = await axios.get(`https:/\/app.sonjj.com/v1/temp_email/inbox?payload=${payload}`);
-            return {
-                refreshToken: refreshToken,
-                messages
-            }
-        }
+            }`
+        };
+        let { data: { data: { message } } } = await axios.post(url, dataMessage)
+        .catch(error => {
+            throw new Error('Error fetching data:', error);
+        });
+        require('fs').writeFileSync('./test.html',message.html,'utf8');
+        return message.html.match(/href="([^"]+)"/)[1].replace(/&amp;/g, '&').split('&').slice(0,-1).join('&')+"&redirect_to=https://dashboard.teneo.pro/auth/verify";
+        //return msg.data.content.match(/href="([^"]+)"/)[1].replace(/&amp;/g, '&');
     }
     catch(e) {
         return e;
@@ -145,21 +145,20 @@ async function createAccount(referalCode) {
         })
         let $ = cheerio.load(res.data)
         let name = $('div[class=random-results]').text().trim().trimStart().split(' ')
-        let fullName = name[0]+name[2]
-        let temporaryEmail = await createEmail();
+        let fullName = name[0]+name[2];
+        let temporaryEmail = fullName+randomStr(3)+"@maildrop.cc";
         let isExisting = await axios.post(urlCheckEmail, {
-            email: temporaryEmail.email
+            email: temporaryEmail
         }, {
 	        headers: headersCheckEmail
         }).then(response=>response.data.exists)
         .catch(error => {
             throw new Error('Error:', error.response ? error.response.data : error.message);
         });
-        console.log(isExisting)
         if (!isExisting) {
 	        let password = name[0]+randomStr(4);
             let signup = await axios.post(urlSignup, {
-                email: temporaryEmail.email,
+                email: temporaryEmail,
                 password: password,
                 data: {
                     invited_by: referalCode
@@ -169,48 +168,20 @@ async function createAccount(referalCode) {
                 code_challenge_method: null
             }, {
     	        headers: headersRegister
-    	    }).then(response => console.log(response.data))
+    	    }).then(response => response)
     	    .catch(error => {
-    	    console.log(error.response)
                 throw new Error('Error:', error.response ? error.response.data : error.message);
             });
-            console.log(signUp)
-            let res = await getMails(temporaryEmail);
-            let refreshToken = res.refreshToken;
-            while(true){
-                await new Promise(resolve => setTimeout(resolve, 5000));
-	            checkMsgs = await getMails(temporaryEmail,refreshToken).catch(e=>{
-	   	            throw new Error('Error happened while fetching the messages on this mailbox!')
-	            });
-	            if (checkMsgs.messages.length == 0)
-	                refreshToken = checkMsgs.refreshToken;
-	            else
-	                break;
-            }
-            let {
-                data: msgToken
-            } = await axios.get(`${baseUrl}app/payload?url=https%3A%2F%2Fapp.sonjj.com%2Fv1%2Ftemp_email%2Fmessage&email=${temporaryEmail.email}&mid=${checkMsgs.messages[0].mid}`, {
-                headers: {
-                    'cookie': temporaryEmail.cookie
-                }
-            });
-            let {
-                data: {
-                    body
-                }
-            } = await axios.get(`https:/\/app.sonjj.com/v1/temp_email/message?payload=${msgToken}`);
-            let verifyUrlMatch = body.match(/href="([^"]+)"/);
-            if (verifyUrlMatch) {
-                let encodedUrl = verifyUrlMatch[1];
-                verifyEmailUrl = encodedUrl.replace(/&amp;/g, '&');
-            }
-            else
-                throw new Error("No verification URL found in the message body.");
-            //console.log(verifyEmailUrl);
-            //await axios.get(verifyEmailUrl);
-            console.log("~• Account Creation Success •~\n\nemail: "+temporaryEmail.email+"\npass: "+password);
+            console.log(signup)
+            let verifyEmailUrl = await getMails(temporaryEmail);
+            console.log(verifyEmailUrl)
+            let test = await axios.get(verifyEmailUrl, {
+                withCredentials: true
+            }).catch(e=>e);
+            console.log(test)
+            console.log("~• Account Creation Success •~\n\nemail: "+temporaryEmail+"\npass: "+password);
             return {
-                email: temporaryEmail.email,
+                email: temporaryEmail,
                 pass: password
             };
         }
