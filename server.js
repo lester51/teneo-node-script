@@ -51,7 +51,7 @@ class Server {
             let token = process.env.TOKEN;
             displayHeader();
             console.log(colors.verbose.bold("[ SERVER ]")+colors.info(`Server for heartbeat is open at port ${port}`));
-            if (process.env.TOKEN || process.env.TOKEN != null) {
+            /*if (process.env.TOKEN || process.env.TOKEN != null) {
                 if (token.startsWith("[") && token.endsWith("]")) {
 	                let tokenList = token.slice(1,-1).split(',').map(el=>el.replace(/ /g,""));
                     for (const token of tokenList) {
@@ -68,7 +68,7 @@ class Server {
                     });
                 }
             }
-            else {
+            else {*/
                 let email = process.env.EMAIL;
                 let pass = process.env.PASSWORD;
                 let loginInfo = await getAccessToken({email: email, pass: pass});
@@ -76,7 +76,7 @@ class Server {
                 connectWebSocket(loginInfo,{
                     silentPing: true
                 });
-            }
+            //}
         });
 
         //FOR REFERAL POINTS FARMING 
